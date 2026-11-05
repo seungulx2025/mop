@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}[hidden]{display:none!important}</style>
+<title>Dart 주관식 퀴즈</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+/* Layout: one answer-sheet card at a time, filter chips above, score strip on top */
+:root{
+  --bg:#f3f5f4; --surface:#ffffff; --fg:#1a2230; --muted:#5d6876; --line:#d9dfe3;
+  --accent:#0b7480; --accent-soft:#e0f0f1; --code:#eef2f3;
+  --ok:#237a3b; --ok-soft:#e3f3e7; --bad:#b3362a; --bad-soft:#fbe7e4;
+  --sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"JetBrains Mono","D2Coding",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11161c; --surface:#1a2129; --fg:#e4e9ee; --muted:#97a3b0; --line:#2c3641;
+  --accent:#4cc3cd; --accent-soft:#163238; --code:#141a21;
+  --ok:#6fd08a; --ok-soft:#173022; --bad:#ff8a7a; --bad-soft:#3a1d1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161c; --surface:#1a2129; --fg:#e4e9ee; --muted:#97a3b0; --line:#2c3641;
+  --accent:#4cc3cd; --accent-soft:#163238; --code:#141a21;
+  --ok:#6fd08a; --ok-soft:#173022; --bad:#ff8a7a; --bad-soft:#3a1d1a; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.55}
+.wrap{max-width:720px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 16px}
+h1{font-size:1.45rem;margin:0;letter-spacing:-.02em;text-wrap:balance}
+.sub{color:var(--muted);font-size:.85rem;margin:2px 0 0}
+.score{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.9rem;display:flex;gap:12px}
+.score b{color:var(--ok)} .score i{font-style:normal;color:var(--bad);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{font:inherit;font-size:.82rem;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:5px 11px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:700}
+.chip:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.spacer{flex:1}
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--accent);transition:width .25s}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.meta{display:flex;justify-content:space-between;gap:8px;font-size:.78rem;color:var(--muted);letter-spacing:.04em}
+.num{font-family:var(--mono);font-weight:700;color:var(--accent)}
+.q{font-size:1.08rem;font-weight:500;margin:0;text-wrap:pretty}
+pre{margin:0;background:var(--code);border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-family:var(--mono);font-size:.86rem;overflow-x:auto;line-height:1.5}
+.row{display:flex;gap:8px}
+#ans{flex:1;min-width:0;font:inherit;font-family:var(--mono);font-size:1rem;padding:10px 12px;border:1.5px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+#ans:disabled{opacity:.75}
+.btn{font:inherit;font-weight:700;border:0;border-radius:6px;padding:10px 16px;cursor:pointer;background:var(--accent);color:var(--surface);white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:500}
+.result{border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.result.ok{background:var(--ok-soft)} .result.bad{background:var(--bad-soft)}
+.verdict{font-weight:700} .ok .verdict{color:var(--ok)} .bad .verdict{color:var(--bad)}
+.correct{font-family:var(--mono);font-weight:700;white-space:pre-wrap}
+.explain{color:var(--fg);font-size:.92rem}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.hint{font-size:.78rem;color:var(--muted)}
+.end h2{margin:0;font-size:1.2rem}
+.big{font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--accent)}
+.wrong-list{margin:0;padding-left:18px;font-size:.9rem;color:var(--muted)}
+kbd{font-family:var(--mono);font-size:.75rem;border:1px solid var(--line);border-radius:3px;padding:0 4px}
+@media (prefers-reduced-motion:reduce){.bar span{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Dart · Flutter 주관식 퀴즈</h1>
+      <p class="sub">2026-2 중간종합평가 범위 · 답을 직접 입력하면 자동 채점</p>
+    </div>
+    <div class="score" aria-live="polite"><span>정답 <b id="sOk">0</b></span><span>오답 <i id="sBad">0</i></span><span id="sPos">1 / 1</span></div>
+  </header>
+
+  <div class="chips" id="chips" role="group" aria-label="범위 선택"></div>
+  <div class="bar"><span id="bar" style="width:0"></span></div>
+
+  <section class="card" id="card">
+    <div class="meta"><span>시험 <span class="num" id="qnum"></span>번</span><span id="qcat"></span></div>
+    <p class="q" id="qtext"></p>
+    <pre id="qcode" hidden></pre>
+    <form class="row" id="form" autocomplete="off">
+      <input id="ans" type="text" placeholder="답을 입력하세요" aria-label="답 입력" spellcheck="false">
+      <button class="btn" id="submit" type="submit">채점</button>
+    </form>
+    <div class="result" id="result" hidden>
+      <div class="verdict" id="verdict"></div>
+      <div>정답 <span class="correct" id="correct"></span></div>
+      <div class="explain" id="explain"></div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="override" type="button" hidden>내 답도 맞음</button>
+      <button class="btn ghost" id="skip" type="button">모르겠음</button>
+      <button class="btn" id="next" type="button" hidden>다음 문제</button>
+    </div>
+    <p class="hint">대소문자와 띄어쓰기, 쉼표, 따옴표는 채점에서 무시해요. 채점 후 <kbd>Enter</kbd>로 다음 문제.</p>
+  </section>
+
+  <section class="card end" id="end" hidden>
+    <h2>다 풀었어요</h2>
+    <div class="big" id="endScore"></div>
+    <ol class="wrong-list" id="wrongList"></ol>
+    <div class="actions">
+      <button class="btn ghost" id="retryAll" type="button">처음부터 다시</button>
+      <button class="btn" id="retryWrong" type="button">오답만 다시</button>
+    </div>
+  </section>
+</div>
+
+<script>
+const CATS={d:"Dart 기초",n:"Null Safety",w:"위젯",s:"상태 관리",f:"오류 수정"};
+// [examNo, cat, question, code, accepts[], explanation, keywords[]?]
+const Q=[
+[1,"d","자료형을 명시하지 않고, 초기화한 값으로 자료형을 추론하게 하는 키워드는?","",["var"],"var로 선언하면 처음 넣은 값으로 타입이 정해지고, 이후 다른 타입은 넣을 수 없어요."],
+[2,"d","실행 결과는?","int a = 7;\nint b = 2;\nprint(a ~/ b);",["3"],"~/ 는 정수 나눗셈의 몫. 7 ÷ 2 = 3.5 → 3"],
+[3,"d","변수에 값을 한 번만 할당할 수 있게 하는 키워드는?","",["final"],"final은 한 번 할당하면 다시 바꿀 수 없어요."],
+[4,"d","출력되는 값은?","var numbers = [10, 20, 30];\nprint(numbers[1]);",["20"],"첨자는 0부터. [1]은 두 번째 원소 20."],
+[5,"d","중복 원소를 허용하지 않는 컬렉션 자료형은?","",["set"],"Set은 { }로 만들고 같은 값은 하나만 남아요."],
+[6,"d","실행 결과는?","int a = 5;\nprint('${a + 3}');",["8"],"${ } 안의 식이 계산돼 8이 출력돼요."],
+[7,"d","이름이 없는 함수를 무엇이라고 하나?","",["익명함수","익명","anonymousfunction","anonymous","람다","람다함수","lambda"],"(value) { ... } 처럼 이름 없이 만드는 함수예요."],
+[8,"d","사용된 데이터 타입은?","var user = {'name': 'Kim', 'age': 20};",["map","map<string,object>"],"{ key : value } 형태는 Map."],
+[8,"d","출력되는 값은?","var user = {'name': 'Kim', 'age': 20};\nprint(user['name']);",["kim"],"key 'name'의 값 Kim을 꺼내요."],
+[9,"d","함수의 반환 자료형은?","double average(int a, int b) {\n  return (a + b) / 2;\n}",["double"],"함수 이름 앞에 적힌 타입이 반환 타입."],
+[10,"d","실행 결과는?","var nums = [1, 2, 3];\nprint(nums.map((n) => n * 2).toList());",["[2,4,6]"],"map으로 ×2, toList로 List가 되어 [ ]로 출력돼요."],
+[11,"n","name에 null을 저장하려면 String 뒤에 어떤 기호를 붙이나?","String name = 'Dart';",["?","string?","string?name"],"타입 뒤에 ? → String? name"],
+[12,"n","출력되는 값은?","String? name;\nprint(name ?? 'Guest');",["guest"],"name이 null이라 ?? 오른쪽 'Guest'."],
+[13,"n","nullable 변수가 null이 아님을 개발자가 단언하는 연산자는?","",["!"],"a! 는 'null 아님'을 보장. 실제 null이면 런타임 오류."],
+[14,"n","실행 결과는?","String? text;\nprint(text?.length);",["null"],"?. 는 앞이 null이면 실행하지 않고 null."],
+[15,"n","실행 결과는?","int? count;\ncount ??= 10;\nprint(count);",["10"],"??= 는 null일 때만 할당."],
+[16,"n","이 코드의 문제는?","int age = null;",["int?age=null"],"int는 null을 가질 수 없어 컴파일 오류. int? age = null; 로 수정.",["int?","null불가","null을저장할수없","null을넣을수없","컴파일"]],
+[17,"n","출력 결과는?","String? value = 'Flutter';\nprint(value?.length ?? 0);",["7"],"'Flutter'의 길이 7. ?? 0은 쓰이지 않아요."],
+[18,"n","null을 다른 값으로 대체하는 연산자는?","int? x;\nint y = x ?? 100;",["??"],"?? 는 왼쪽이 null이면 오른쪽 값으로 대체."],
+[18,"n","출력 결과는?","int? x;\nint y = x ?? 100;\nprint(y);",["100"],"x가 null → 100."],
+[19,"n","실행 결과는?","String? name = null;\nprint(name!.length);",["런타임오류","런타임에러","runtimeerror","오류","에러","error"],"null에 ! 를 써서 실행 중 오류가 나요.",["런타임","runtime"]],
+[20,"n","value가 null일 때 반환 값은?","int getLength(String? value) {\n  return value?.length ?? -1;\n}",["-1"],"null?.length → null → ?? -1"],
+[21,"w","Flutter에서 화면을 구성하는 기본 단위는?","",["위젯","widget"],"글자, 버튼, 화면 전체까지 모두 위젯."],
+[22,"w","Material Design 기반 최상위 위젯은?","",["materialapp"],"앱 전체를 감싸는 최상위 위젯."],
+[23,"w","AppBar와 body 등을 배치하는 위젯은?","",["scaffold"],"화면 한 장의 뼈대."],
+[24,"w","여러 위젯을 수직으로 배치하는 위젯은?","",["column"],"Column = 세로."],
+[25,"w","여러 위젯을 수평으로 배치하는 위젯은?","",["row"],"Row = 가로."],
+[26,"w","화면에 표시되는 문자열은?","Text('Hello Flutter')",["helloflutter"],"괄호 안 문자열 그대로."],
+[27,"s","내부 상태가 변경될 수 있는 화면을 만드는 위젯 클래스는?","",["statefulwidget"],"값이 바뀌면 다시 그리는 위젯."],
+[28,"s","상태 변경을 알려 화면 갱신을 요청하는 메서드는?","",["setstate"],"setState 안에서 값을 바꾸면 build가 다시 실행돼요."],
+[29,"w","텍스트를 화면 중앙에 배치하는 위젯은?","Center( child: Text('Dart'), )",["center"],"Center는 child를 가운데에."],
+[30,"w","가용 공간의 제약 조건으로 반응형 레이아웃을 만드는 위젯은?","",["layoutbuilder"],"constraints를 받아 크기에 맞게 구성."],
+[31,"d","실행 결과는?","var values = [2, 4, 6, 8];\nvar result = values.where((n) => n > 4).toList();\nprint(result);",["[6,8]"],"where는 조건이 true인 것만."],
+[32,"d","출력 값은?","int a = 10;\nint b = 20;\nprint(a > b ? a : b);",["20"],"조건 false → : 뒤 b."],
+[33,"d","n²을 반환하는 함수의 빈칸 기호는?","int square(int n) ___ n * n;",["=>"],"한 문장 함수는 fat arrow =>"],
+[34,"d","실행 결과는?","var list = [1, 2, 3];\nlist.add(4);\nprint(list.length);",["4"],"[1, 2, 3, 4] → 길이 4"],
+[35,"d","출력 결과는?","final a = [1, 2];\na.add(3);\nprint(a);",["[1,2,3]"],"final은 재할당만 막고, 리스트 내용 추가는 가능."],
+[36,"n","실행 결과는?","String? name;\nprint(name?.toUpperCase() ?? 'UNKNOWN');",["unknown"],"null → ?? 오른쪽 'UNKNOWN'"],
+[37,"n","발생하는 오류의 종류는?","String? title;\nprint(title!.length);",["런타임오류","런타임에러","runtimeerror"],"컴파일은 되지만 실행 중 ! 에서 오류.",["런타임","runtime"]],
+[38,"n","빈칸에 들어갈 연산자는?","int? count;\ncount ___ 5;\nprint(count);",["??="],"null일 때만 5 할당."],
+[39,"n","이 코드의 문제와 수정 방법은?","String? name = 'Kim';\nprint(name.length);",["name?.length","name!.length"],"nullable이라 .length 바로 사용 불가 → name?.length 또는 name!.length (시험 의도 답)",["?.","!.","nullable","널"]],
+[40,"n","null을 전달하면 반환 값은?","int calculate(int? value) {\n  return (value ?? 0) * 2;\n}",["0"],"null → 0, 0 × 2 = 0"],
+[41,"w","빈칸에 들어갈 위젯 클래스는?","class MyPage extends __________ {\n  const MyPage({super.key});\n  @override\n  Widget build(BuildContext context) {\n    return const Text('Hello');\n  }\n}",["statelesswidget"],"build만 있는 바뀌지 않는 위젯."],
+[42,"s","버튼을 한 번 누르면 표시되는 숫자는? (초기 count = 0)","onPressed: () {\n  setState(() {\n    count += 2;\n  });\n}",["2"],"0 + 2 = 2"],
+[43,"s","State가 처음 생성될 때 한 번 호출되는 초기화 메서드는?","",["initstate"],"화면이 처음 만들어질 때 한 번."],
+[44,"w","화면에 표시되는 문자열은?","Text(\n  'Flutter',\n  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),\n)",["flutter"],"style은 모양만 바꿔요."],
+[45,"s","TextEditingController 등 자원을 해제하는 메서드는?","",["dispose"],"화면이 사라질 때 호출. initState ↔ dispose"],
+[46,"w","두 Text 위젯의 배치 방향은?","Row(\n  children: [Text('A'), Text('B')],\n)",["가로","수평","horizontal"],"Row는 가로, 왼쪽부터 A → B",["가로","수평","horizontal","왼쪽"]],
+[47,"w","Column의 주축 중앙 정렬 값은?","Column(\n  mainAxisAlignment: __________,\n  children: [Text('A'), Text('B')],\n)",["mainaxisalignment.center"],"Column의 주축은 세로."],
+[48,"s","버튼을 누르면 count는? (초기 3)","int count = 3;\nElevatedButton(\n  onPressed: () {\n    count++;\n  },\n  child: Text('증가'),\n)",["4"],"값은 4. 단 setState가 없어 화면은 3 그대로."],
+[49,"w","Row의 자식을 남은 가로 공간 전체로 확장하는 위젯은?","Row(\n  children: [\n    __________(child: Container(color: Colors.blue)),\n  ],\n)",["expanded"],"Row/Column 안에서 남은 공간 차지."],
+[50,"w","부모의 크기 제약 조건으로 화면 구성을 결정하는 위젯은?","",["layoutbuilder"],"30번과 같은 개념."],
+[51,"f","컴파일 오류를 수정한 첫 줄을 쓰시오.","int number = '100';\nprint(number + 20);",["intnumber=100","varnumber=100","intnumber=int.parse('100')","intnumber=int.parse100"],"'100'은 문자열. 따옴표를 빼면 120 출력."],
+[52,"f","값을 바꿀 수 있도록 수정한 첫 줄을 쓰시오.","final int count = 10;\ncount = 20;\nprint(count);",["intcount=10","varcount=10"],"final 제거."],
+[53,"f","0을 출력하도록 수정한 print 문을 쓰시오.","String? name;\nprint(name.length);",["print(name?.length??0)"],"?. 로 안전하게, ?? 로 0 대체."],
+[54,"f","마지막 요소를 출력하도록 수정한 print 문을 쓰시오.","var numbers = [10, 20, 30];\nprint(numbers[3]);",["print(numbers[2])","print(numbers.last)","print(numbers[numbers.length-1])"],"첨자는 0~2. [3]은 범위 밖."],
+[55,"f","반환 자료형 오류를 수정한 첫 줄을 쓰시오.","int average(int a, int b) {\n  return (a + b) / 2;\n}",["doubleaverage(inta,intb){","doubleaverage(inta,intb)","double"],"/ 결과는 double."],
+[56,"f","build 메서드의 올바른 선언 줄을 쓰시오.","class MyWidget extends StatelessWidget {\n  const MyWidget({super.key});\n  Widget build() {\n    return const Text('Hello');\n  }\n}",["widgetbuild(buildcontextcontext)","widgetbuild(buildcontextcontext){"],"BuildContext context 매개변수 + @override",["buildcontext"]],
+[57,"f","여러 자식을 지정하려면 child를 무엇으로 바꾸나?","Row(\n  child: [\n    Text('A'),\n    Text('B'),\n  ],\n)",["children","children:"],"자식이 여러 개면 children."],
+[58,"f","count가 화면에 반영되도록 onPressed 안을 어떻게 바꾸나?","onPressed: () {\n  count++;\n},",["setstate({count++})","setstate({count++}){"],"setState(() { count++; }); 로 감싸기",["setstate"]],
+[59,"f","Expanded를 쓰려면 어떤 위젯으로 감싸야 하나?","Scaffold(\n  body: Expanded(\n    child: Text('Hello'),\n  ),\n)",["column","row"],"Expanded는 Row/Column(Flex) 안에서만.",["column","row","flex"]],
+[60,"f","printHello가 버튼을 누를 때 실행되도록 onPressed를 고치시오.","void printHello() {\n  print('Hello');\n}\nElevatedButton(\n  onPressed: printHello(),\n  child: Text('Click'),\n)",["onpressed:printhello","printhello","onpressed:=>printhello","=>printhello"],"괄호를 빼고 함수 이름만 넘겨요."],
+[61,"d","출력 결과를 순서대로 쓰시오.","int a = 7;\nint b = 3;\nprint(a ~/ b);\nprint(a % b);",["21"],"몫 2, 나머지 1"],
+[62,"d","출력 결과는?","int sum = 0;\nfor (int i = 1; i <= 5; i++) {\n  if (i % 2 == 0) continue;\n  sum += i;\n}\nprint(sum);",["9"],"홀수만 더함: 1 + 3 + 5"],
+[63,"d","출력 결과는?","var numbers = [1, 2, 3, 4, 5];\nvar result = numbers\n    .where((n) => n % 2 == 0)\n    .map((n) => n * 10)\n    .toList();\nprint(result);",["[20,40]"],"짝수 2, 4 → ×10"],
+[64,"n","출력 결과를 순서대로 쓰시오.","String? name;\nprint(name?.length ?? -1);\nname = 'Dart';\nprint(name.length);",["-14"],"처음 null → -1, 'Dart' 넣은 뒤 → 4"],
+[65,"d","출력 결과를 순서대로 쓰시오.","int calculate(int a, {int b = 5}) {\n  return a * b;\n}\nprint(calculate(3));\nprint(calculate(3, b: 4));",["1512"],"기본값 5 → 15, b: 4 → 12"],
+[66,"d","출력 결과는?","var values = <int>{1, 2, 2, 3};\nprint(values.length);",["3"],"Set은 중복 제거 → {1, 2, 3}"],
+[67,"s","초기 count 0에서 버튼을 두 번 누르면?","Text('$count'),\nElevatedButton(\n  onPressed: () {\n    setState(() {\n      count += 3;\n    });\n  },\n  child: Text('증가'),\n)",["6"],"0 → 3 → 6"],
+[68,"w","세 Text 위젯의 순서와 방향은?","Column(\n  children: [Text('A'), Text('B'), Text('C')],\n)",["세로","abc"],"위에서 아래로 A → B → C",["세로","수직","위에서","vertical"]],
+[69,"w","isLogin이 false일 때 표시되는 문자열은?","bool isLogin = false;\nText(isLogin ? 'Welcome' : 'Login')",["login"],"false → : 뒤 값"],
+[70,"s","초기 count 5에서 버튼을 한 번 누르면?","onPressed: () {\n  setState(() {\n    count *= 2;\n  });\n}",["10"],"5 × 2"]
+];
+
+const norm=s=>s.toLowerCase().replace(/\(\)/g,"").replace(/[\s,'"`‘’“”;\/]/g,"").replace(/(입니다|이다|요)$/,"");
+const $=id=>document.getElementById(id);
+let filter="all", order=[], pos=0, ok=0, bad=0, wrong=[], graded=false;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function pool(){return Q.map((_,i)=>i).filter(i=>filter==="all"||Q[i][1]===filter)}
+function start(list){order=shuffle(list||pool());pos=0;ok=0;bad=0;wrong=[];$("end").hidden=true;$("card").hidden=false;show()}
+
+function renderChips(){
+  const c=$("chips");c.innerHTML="";
+  [["all","전체"],...Object.entries(CATS)].forEach(([k,v])=>{
+    const n=k==="all"?Q.length:Q.filter(q=>q[1]===k).length;
+    const b=document.createElement("button");b.className="chip";b.type="button";b.id="chip-"+k;
+    b.textContent=`${v} ${n}`;b.setAttribute("aria-pressed",filter===k);
+    b.onclick=()=>{filter=k;renderChips();start()};c.appendChild(b);
+  });
+}
+function show(){
+  graded=false;const q=Q[order[pos]];
+  $("qnum").textContent=q[0];$("qcat").textContent=CATS[q[1]];$("qtext").textContent=q[2];
+  $("qcode").hidden=!q[3];$("qcode").textContent=q[3];
+  $("ans").value="";$("ans").disabled=false;$("submit").hidden=false;$("skip").hidden=false;
+  $("result").hidden=true;$("next").hidden=true;$("override").hidden=true;
+  $("ans").placeholder=/순서대로/.test(q[2])?"띄어쓰기로 구분해 입력 (예: 2 1)":"답을 입력하세요";
+  updateScore();$("ans").focus();
+}
+function updateScore(){
+  $("sOk").textContent=ok;$("sBad").textContent=bad;
+  $("sPos").textContent=`${Math.min(pos+1,order.length)} / ${order.length}`;
+  $("bar").style.width=(pos/order.length*100)+"%";
+}
+function isRight(q,input){
+  const a=norm(input);if(!a)return false;
+  if(q[4].some(x=>norm(x)===a))return true;
+  return (q[6]||[]).some(k=>a.includes(norm(k)));
+}
+function grade(skipped){
+  if(graded)return;graded=true;const q=Q[order[pos]];
+  const right=!skipped&&isRight(q,$("ans").value);
+  if(right)ok++;else{bad++;wrong.push(order[pos])}
+  const r=$("result");r.hidden=false;r.className="result "+(right?"ok":"bad");
+  $("verdict").textContent=right?"정답이에요":(skipped?"건너뛰었어요":"아쉬워요, 오답");
+  $("correct").textContent=q[4][0]==="21"?"2, 1":q[4][0]==="-14"?"-1, 4":q[4][0]==="1512"?"15, 12":displayAns(q);
+  $("explain").textContent=q[5];
+  $("ans").disabled=true;$("submit").hidden=true;$("skip").hidden=true;$("next").hidden=false;
+  $("override").hidden=right||skipped;updateScore();$("next").focus();
+}
+function displayAns(q){
+  const m={"set":"Set","map":"Map","kim":"Kim","guest":"Guest","unknown":"UNKNOWN","login":"Login","flutter":"Flutter","helloflutter":"Hello Flutter",
+  "materialapp":"MaterialApp","scaffold":"Scaffold","column":"Column","row":"Row","center":"Center","layoutbuilder":"LayoutBuilder",
+  "statefulwidget":"StatefulWidget","statelesswidget":"StatelessWidget","setstate":"setState()","initstate":"initState()","dispose":"dispose()",
+  "expanded":"Expanded","mainaxisalignment.center":"MainAxisAlignment.center","children":"children","익명함수":"익명 함수 (anonymous function)",
+  "intnumber=100":"int number = 100;","intcount=10":"int count = 10;","print(name?.length??0)":"print(name?.length ?? 0);",
+  "print(numbers[2])":"print(numbers[2]);","doubleaverage(inta,intb){":"double average(int a, int b) {","widgetbuild(buildcontextcontext)":"@override\nWidget build(BuildContext context)",
+  "setstate({count++})":"setState(() { count++; });","onpressed:printhello":"onPressed: printHello,","int?age=null":"int? age = null;",
+  "런타임오류":"런타임 오류","name?.length":"name?.length 또는 name!.length","세로":"세로 (위 → 아래) A, B, C","가로":"가로 (왼 → 오) A, B","[2,4,6]":"[2, 4, 6]",
+  "[6,8]":"[6, 8]","[1,2,3]":"[1, 2, 3]","[20,40]":"[20, 40]","위젯":"위젯 (Widget)","string?":"? → String? name","!":"! (null 단언 연산자)","??":"?? (null 대체 연산자)"};
+  const k=q[4][0];return m[k]||k;
+}
+function next(){pos++;if(pos>=order.length)finish();else show()}
+function finish(){
+  $("card").hidden=true;$("end").hidden=false;$("bar").style.width="100%";
+  $("sPos").textContent=`${order.length} / ${order.length}`;
+  $("endScore").textContent=`${ok} / ${order.length}`;
+  const wl=$("wrongList");wl.innerHTML="";
+  wrong.forEach(i=>{const li=document.createElement("li");li.textContent=`${Q[i][0]}번 · ${Q[i][2]}`;wl.appendChild(li)});
+  $("retryWrong").hidden=!wrong.length;
+}
+$("form").addEventListener("submit",e=>{e.preventDefault();if(!graded)grade(false)});
+$("skip").onclick=()=>grade(true);
+$("next").onclick=next;
+$("override").onclick=()=>{bad--;ok++;wrong.pop();const r=$("result");r.className="result ok";$("verdict").textContent="정답으로 처리했어요";$("override").hidden=true;updateScore();$("next").focus()};
+$("retryAll").onclick=()=>start();
+$("retryWrong").onclick=()=>start(wrong.slice());
+renderChips();start();
+</script>
+</body>
+</html>
